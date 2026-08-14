@@ -12,6 +12,8 @@ import Journey from "./components/sections/Journey";
 import Contact from "./components/sections/Contact";
 
 import { initScrollAnimations } from "./animations/scrollAnimations";
+import CustomCursor from "./components/layout/CustomCursor";
+
 
 function App() {
   useEffect(() => {
@@ -22,8 +24,9 @@ function App() {
 
   return (
     <main className="app">
+      <CustomCursor />
       <Navbar />
-
+      
       <Hero />
 
       <About />
