@@ -642,4 +642,8 @@
   .contact-email {
     margin-top: 60px;
   }
+  .portfolio-section {
+    overflow: hidden;
+  }
 }
+

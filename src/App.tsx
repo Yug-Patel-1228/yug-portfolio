@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import "./App.css";
 
 import Navbar from "./components/layout/Navbar";
@@ -10,7 +11,15 @@ import OffensiveSecurity from "./components/sections/OffensiveSecurity";
 import Journey from "./components/sections/Journey";
 import Contact from "./components/sections/Contact";
 
+import { initScrollAnimations } from "./animations/scrollAnimations";
+
 function App() {
+  useEffect(() => {
+    const cleanup = initScrollAnimations();
+
+    return cleanup;
+  }, []);
+
   return (
     <main className="app">
       <Navbar />
