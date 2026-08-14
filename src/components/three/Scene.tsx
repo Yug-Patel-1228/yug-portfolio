@@ -1,92 +1,297 @@
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Float, Sparkles } from "@react-three/drei";
-import { useRef } from "react";
+import {
+  Canvas,
+  useFrame,
+  useThree,
+} from "@react-three/fiber";
+
+import {
+  Float,
+  Sparkles,
+} from "@react-three/drei";
+
+import {
+  useEffect,
+  useRef,
+  type MutableRefObject,
+} from "react";
+
 import * as THREE from "three";
 
-function EnergyCore() {
-  const groupRef = useRef<THREE.Group>(null);
-  const outerRef = useRef<THREE.Mesh>(null);
-  const innerRef = useRef<THREE.Mesh>(null);
+import {
+  initSceneScrollController,
+  type SceneScrollState,
+} from "./SceneController";
+
+/* =========================================================
+   CAMERA CONTROLLER
+========================================================= */
+
+function CameraController({
+  scrollState,
+}: {
+  scrollState: MutableRefObject<SceneScrollState>;
+}) {
+  const { camera } = useThree();
+
+  useFrame((state) => {
+    const progress = scrollState.current.progress;
+
+    /*
+     * Mouse position
+     */
+
+    const mouseX = state.pointer.x;
+    const mouseY = state.pointer.y;
+
+    /*
+     * Camera target position
+     */
+
+      const targetX =
+        mouseX * 0.18;
+
+      const targetY =
+        mouseY * 0.12;
+
+      /*
+      * Stronger cinematic pull-back.
+      *
+      * 0   → camera Z = 5
+      * 1   → camera Z = 7
+      */
+
+        const targetZ =
+          5 + progress * 2;
+
+    /*
+     * Smooth camera movement
+     */
+
+    camera.position.x = THREE.MathUtils.lerp(
+      camera.position.x,
+      targetX,
+      0.025,
+    );
+
+    camera.position.y = THREE.MathUtils.lerp(
+      camera.position.y,
+      targetY,
+      0.025,
+    );
+
+    camera.position.z = THREE.MathUtils.lerp(
+      camera.position.z,
+      targetZ,
+      0.025,
+    );
+
+    /*
+     * Always look toward the center.
+     */
+
+    camera.lookAt(0, 0, 0);
+  });
+
+  return null;
+}
+
+/* =========================================================
+   ENERGY CORE
+========================================================= */
+
+function EnergyCore({
+  scrollState,
+}: {
+  scrollState: MutableRefObject<SceneScrollState>;
+}) {
+  const groupRef =
+    useRef<THREE.Group>(null);
+
+  const outerRef =
+    useRef<THREE.Mesh>(null);
+
+  const innerRef =
+    useRef<THREE.Mesh>(null);
 
   const { viewport } = useThree();
 
   useFrame((state, delta) => {
-    if (!groupRef.current || !outerRef.current || !innerRef.current) {
+    if (
+      !groupRef.current ||
+      !outerRef.current ||
+      !innerRef.current
+    ) {
       return;
     }
 
-    /*
-     * Responsive positioning
-     *
-     * Desktop  → move the 3D object slightly to the right
-     * Tablet   → keep it closer to the center
-     * Mobile   → center it behind the typography
-     */
-    const targetX =
+    const progress =
+      scrollState.current.progress;
+
+    /* =====================================================
+       RESPONSIVE POSITION
+    ===================================================== */
+
+    const baseX =
       viewport.width > 8
         ? 2.2
         : viewport.width > 5
           ? 1.2
           : 0;
 
-    const targetY =
+    const baseY =
       viewport.width > 5
         ? 0
         : -0.2;
 
-    groupRef.current.position.x = THREE.MathUtils.lerp(
-      groupRef.current.position.x,
-      targetX,
-      0.025,
+    /* =====================================================
+       SCROLL MOVEMENT
+    ===================================================== */
+
+    const scrollX =
+      progress * 2.0;
+
+    const scrollY =
+      progress * 1.6;
+
+    const scrollZ =
+      progress * -2.0;
+
+    const targetX =
+      baseX + scrollX;
+
+    const targetY =
+      baseY + scrollY;
+
+    /* =====================================================
+       SMOOTH POSITION
+    ===================================================== */
+
+    groupRef.current.position.x =
+      THREE.MathUtils.lerp(
+        groupRef.current.position.x,
+        targetX,
+        0.035,
+      );
+
+    groupRef.current.position.y =
+      THREE.MathUtils.lerp(
+        groupRef.current.position.y,
+        targetY,
+        0.035,
+      );
+
+    groupRef.current.position.z =
+      THREE.MathUtils.lerp(
+        groupRef.current.position.z,
+        scrollZ,
+        0.035,
+      );
+
+    /* =====================================================
+       CONTINUOUS ROTATION
+    ===================================================== */
+
+    outerRef.current.rotation.x +=
+      delta * 0.08;
+
+    outerRef.current.rotation.y +=
+      delta * 0.12;
+
+    innerRef.current.rotation.x -=
+      delta * 0.04;
+
+    innerRef.current.rotation.y -=
+      delta * 0.08;
+
+    /* =====================================================
+       SCROLL ROTATION
+    ===================================================== */
+
+    groupRef.current.rotation.z =
+      THREE.MathUtils.lerp(
+        groupRef.current.rotation.z,
+        progress * 1.2,
+        0.035,
+      );
+
+    /* =====================================================
+       SCROLL SCALE
+    ===================================================== */
+
+    const targetScale =
+      THREE.MathUtils.lerp(
+        1,
+        0.45,
+        progress,
     );
 
-    groupRef.current.position.y = THREE.MathUtils.lerp(
-      groupRef.current.position.y,
-      targetY,
-      0.025,
-    );
+    groupRef.current.scale.x =
+      THREE.MathUtils.lerp(
+        groupRef.current.scale.x,
+        targetScale,
+        0.035,
+      );
 
-    /*
-     * Continuous rotation
-     */
-    outerRef.current.rotation.x += delta * 0.08;
-    outerRef.current.rotation.y += delta * 0.12;
+    groupRef.current.scale.y =
+      THREE.MathUtils.lerp(
+        groupRef.current.scale.y,
+        targetScale,
+        0.035,
+      );
 
-    innerRef.current.rotation.x -= delta * 0.04;
-    innerRef.current.rotation.y -= delta * 0.08;
+    groupRef.current.scale.z =
+      THREE.MathUtils.lerp(
+        groupRef.current.scale.z,
+        targetScale,
+        0.035,
+      );
 
-    /*
-     * Mouse interaction
-     */
-    const mouseX = state.pointer.x * 0.25;
-    const mouseY = state.pointer.y * 0.2;
+    /* =====================================================
+       MOUSE INTERACTION
+    ===================================================== */
 
-    groupRef.current.rotation.x = THREE.MathUtils.lerp(
-      groupRef.current.rotation.x,
-      mouseY,
-      0.025,
-    );
+    const mouseX =
+      state.pointer.x * 0.25;
 
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(
-      groupRef.current.rotation.y,
-      mouseX,
-      0.025,
-    );
+    const mouseY =
+      state.pointer.y * 0.2;
+
+    groupRef.current.rotation.x =
+      THREE.MathUtils.lerp(
+        groupRef.current.rotation.x,
+        mouseY,
+        0.025,
+      );
+
+    groupRef.current.rotation.y =
+      THREE.MathUtils.lerp(
+        groupRef.current.rotation.y,
+        mouseX,
+        0.025,
+      );
   });
 
   return (
-    <group ref={groupRef} position={[2.2, 0, 0]}>
+    <group
+      ref={groupRef}
+      position={[2.2, 0, 0]}
+    >
       <Float
         speed={1.2}
         rotationIntensity={0.15}
         floatIntensity={0.35}
       >
-        {/* ================================
+        {/* =================================================
             INNER ENERGY CORE
-        ================================= */}
+        ================================================= */}
 
-        <mesh ref={innerRef} scale={0.85}>
-          <icosahedronGeometry args={[1.15, 2]} />
+        <mesh
+          ref={innerRef}
+          scale={0.85}
+        >
+          <icosahedronGeometry
+            args={[1.15, 2]}
+          />
 
           <meshStandardMaterial
             color="#182b46"
@@ -97,12 +302,17 @@ function EnergyCore() {
           />
         </mesh>
 
-        {/* ================================
+        {/* =================================================
             OUTER STRUCTURE
-        ================================= */}
+        ================================================= */}
 
-        <mesh ref={outerRef} scale={1.05}>
-          <icosahedronGeometry args={[1.45, 2]} />
+        <mesh
+          ref={outerRef}
+          scale={1.05}
+        >
+          <icosahedronGeometry
+            args={[1.45, 2]}
+          />
 
           <meshBasicMaterial
             color="#6fa8ff"
@@ -112,12 +322,14 @@ function EnergyCore() {
           />
         </mesh>
 
-        {/* ================================
+        {/* =================================================
             INNER GLOW
-        ================================= */}
+        ================================================= */}
 
         <mesh scale={0.38}>
-          <sphereGeometry args={[1, 32, 32]} />
+          <sphereGeometry
+            args={[1, 32, 32]}
+          />
 
           <meshStandardMaterial
             color="#b9dcff"
@@ -129,9 +341,9 @@ function EnergyCore() {
         </mesh>
       </Float>
 
-      {/* ================================
+      {/* ===================================================
           FLOATING PARTICLES
-      ================================= */}
+      =================================================== */}
 
       <Sparkles
         count={45}
@@ -143,6 +355,83 @@ function EnergyCore() {
     </group>
   );
 }
+
+/* =========================================================
+   SCENE CONTENT
+========================================================= */
+
+function SceneContent() {
+  /*
+   * ONE shared scroll state.
+   *
+   * Both the camera and EnergyCore
+   * use this same state.
+   */
+
+  const scrollState =
+    useRef<SceneScrollState>({
+      progress: 0,
+    });
+
+  /*
+   * Start the scroll controller.
+   */
+
+  useEffect(() => {
+    return initSceneScrollController(
+      scrollState.current,
+    );
+  }, []);
+
+  return (
+    <>
+      {/* ===================================================
+          CAMERA
+      =================================================== */}
+
+      <CameraController
+        scrollState={scrollState}
+      />
+
+      {/* ===================================================
+          LIGHTING
+      =================================================== */}
+
+      <ambientLight
+        intensity={0.35}
+      />
+
+      <directionalLight
+        position={[4, 5, 5]}
+        intensity={2.5}
+      />
+
+      <pointLight
+        position={[3, 1, 3]}
+        intensity={12}
+        distance={8}
+      />
+
+      <pointLight
+        position={[-3, -2, 2]}
+        intensity={6}
+        distance={7}
+      />
+
+      {/* ===================================================
+          3D OBJECT
+      =================================================== */}
+
+      <EnergyCore
+        scrollState={scrollState}
+      />
+    </>
+  );
+}
+
+/* =========================================================
+   MAIN SCENE
+========================================================= */
 
 function Scene() {
   return (
@@ -158,34 +447,7 @@ function Scene() {
           alpha: true,
         }}
       >
-        {/* ================================
-            LIGHTING
-        ================================= */}
-
-        <ambientLight intensity={0.35} />
-
-        <directionalLight
-          position={[4, 5, 5]}
-          intensity={2.5}
-        />
-
-        <pointLight
-          position={[3, 1, 3]}
-          intensity={12}
-          distance={8}
-        />
-
-        <pointLight
-          position={[-3, -2, 2]}
-          intensity={6}
-          distance={7}
-        />
-
-        {/* ================================
-            3D OBJECT
-        ================================= */}
-
-        <EnergyCore />
+        <SceneContent />
       </Canvas>
     </div>
   );
