@@ -852,3 +852,23 @@
     transition-duration: 0.01ms !important;
   }
 }
+/* ================================
+   THREE.JS SCENE
+================================ */
+
+.three-scene {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+}
+
+.three-scene canvas {
+  display: block;
+
+  width: 100% !important;
+  height: 100% !important;
+}

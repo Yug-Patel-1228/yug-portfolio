@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import Scene from "../three/Scene";
 
 function Hero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -54,6 +55,7 @@ function Hero() {
 
   return (
     <section ref={heroRef} className="hero">
+      <Scene />
       <div className="hero-content">
         <p className="hero-eyebrow">HELLO, I'M</p>
 
