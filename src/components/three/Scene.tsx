@@ -16,7 +16,8 @@ import {
 } from "react";
 
 import * as THREE from "three";
-
+import Atmosphere from "./Atmosphere";
+import Lighting from "./Lighting";
 import {
   initSceneScrollController,
   type SceneScrollState,
@@ -384,39 +385,18 @@ function SceneContent() {
   }, []);
 
   return (
-    <>
-      {/* ===================================================
-          CAMERA
-      =================================================== */}
+      <>
+        <CameraController
+          scrollState={scrollState}
+        />
 
-      <CameraController
-        scrollState={scrollState}
-      />
+        {/* ===================================================
+            3D ATMOSPHERE
+        =================================================== */}
 
-      {/* ===================================================
-          LIGHTING
-      =================================================== */}
+        <Atmosphere />
 
-      <ambientLight
-        intensity={0.35}
-      />
-
-      <directionalLight
-        position={[4, 5, 5]}
-        intensity={2.5}
-      />
-
-      <pointLight
-        position={[3, 1, 3]}
-        intensity={12}
-        distance={8}
-      />
-
-      <pointLight
-        position={[-3, -2, 2]}
-        intensity={6}
-        distance={7}
-      />
+        <Lighting />
 
       {/* ===================================================
           3D OBJECT
